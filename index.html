@@ -3,10 +3,9 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-<title>PT Tracker — Single‑File (Fast Add)</title>
+<title>PT Tracker — Simple Log</title>
 <meta name="theme-color" content="#0b1020">
 <link rel="icon" href="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='64' height='64'><rect width='100%' height='100%' fill='%231b5bff'/><text x='50%' y='58%' text-anchor='middle' font-family='Arial' font-size='44' fill='white'>PT</text></svg>">
-<!-- Única dependencia permitida -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js" crossorigin="anonymous"></script>
 <style>
   :root{
@@ -36,10 +35,8 @@
     background:#0f1731; color:var(--text); cursor:pointer; font-size:16px; font-weight:600
   }
   .btn.primary{background:linear-gradient(180deg,#1c6b42,#155b38); border-color:#0d3b24}
-  .btn.ghost{background:transparent}
   .btn.small{height:40px; padding:0 12px; border-radius:10px; font-size:14px; font-weight:500}
   .btn.block{width:100%}
-  .btn.icon{display:flex; align-items:center; gap:10px; justify-content:center}
   .grid{display:grid; gap:12px}
   .panel{background:var(--panel); border:1px solid var(--line); border-radius:16px; padding:12px}
   .card{background:var(--card); border:1px solid var(--line); border-radius:16px; padding:12px}
@@ -51,12 +48,8 @@
     width:100%; background:#0e162e; color:var(--text); border:1px solid var(--line);
     border-radius:14px; padding:12px 14px; height:48px; outline:none; font-size:16px
   }
-  input[type="checkbox"]{width:22px; height:22px}
   textarea{min-height:92px; resize:vertical}
   .muted{color:var(--muted)}
-  .badge{display:inline-block; padding:6px 10px; border-radius:999px; font-size:12px; border:1px solid var(--line)}
-  .badge.ok{color:#68f0a7; border-color:#183a2d; background:#0b1f18}
-  .badge.warn{color:#ffd26a; border-color:#3a2e18; background:#1b160b}
   main{flex:1; padding:12px 12px 88px}
   section[hidden]{display:none !important}
 
@@ -80,24 +73,24 @@
   .legend{display:flex; gap:8px; align-items:center}
   .legend .sw{width:18px; height:12px; border-radius:4px; border:1px solid var(--line)}
 
-  /* FAST ADD — controles grandes (mobile‑first) */
-  .fastadd{display:grid; gap:10px}
-  .big{display:flex; align-items:center; gap:10px}
-  .big label{min-width:110px; margin:0; font-size:14px}
-  .big .step{display:flex; align-items:center; gap:8px}
-  .big .step input[type="number"]{width:120px; text-align:center; height:52px; font-size:18px; padding:0 8px}
-  .big .step button{width:52px; height:52px; border-radius:12px; border:1px solid var(--line); background:#0f1731; color:var(--text); font-size:22px; font-weight:700}
-  .subtle{font-size:12px; color:var(--muted)}
-
-  /* Listado del día */
+  /* Simple Add */
+  .simple label b{color:#eaf0ff}
+  .hint{font-size:12px; color:var(--muted)}
   .exitem{display:flex; justify-content:space-between; align-items:center; padding:10px 0; border-bottom:1px solid var(--line)}
   .exitem:last-child{border-bottom:none}
   .exname{font-weight:600}
   .exmeta{color:var(--muted); font-size:13px}
 
+  /* Slider "cómo me sentí" */
+  .feel-wrap{padding:10px; border-radius:14px; border:1px solid var(--line); background:#0e162e}
+  .feel-row{display:flex; align-items:center; gap:12px}
+  .feel-emoji{font-size:22px; width:32px; text-align:center}
+  input[type="range"]{width:100%}
+  .feel-chip{display:inline-block; padding:4px 8px; border:1px solid var(--line); border-radius:999px; font-size:12px; color:#cbe0ff}
+
   /* Print */
   @media print{
-    nav.tabs, header, .modal{display:none !important}
+    nav.tabs, header{display:none !important}
     body{background:#fff; color:#000}
     .panel, .card{border-color:#ddd}
   }
@@ -107,15 +100,15 @@
 <div class="app" role="application" aria-label="PT Tracker">
   <header>
     <div class="row" role="toolbar" aria-label="Barra superior">
-      <button id="btnToday" class="btn small ghost" aria-label="Ir a hoy">Hoy</button>
-      <div class="chip" id="ctxDateChip" role="button" aria-label="Cambiar fecha">📅 <span id="ctxDateLabel">—</span></div>
-      <div class="chip ok" id="metaChip">Meta mes: —</div>
-      <span class="right muted" id="saveState">• sin guardar</span>
+      <button id="btnToday" class="btn small" aria-label="Ir a hoy">Hoy</button>
+      <div class="chip" id="ctxDateChip" role="button" aria-label="Fecha">📅 <span id="ctxDateLabel">—</span></div>
+      <div class="chip ok right" id="metaChip">Meta mes: —</div>
+      <span class="muted" id="saveState">• sin guardar</span>
     </div>
   </header>
 
   <main>
-    <!-- ===== Registrar (con FAST ADD) ===== -->
+    <!-- ===== Registrar (Simple Log) ===== -->
     <section id="tab-registrar" aria-label="Registrar sesión">
       <div class="grid">
         <!-- Calendario compacto arriba -->
@@ -136,123 +129,97 @@
         <div class="panel">
           <div class="row">
             <div class="grow">
-              <label for="bodyWeight">Peso corporal (kg)</label>
+              <label for="bodyWeight"><b>Peso corporal (kg)</b></label>
               <input id="bodyWeight" type="number" step="0.1" min="20" max="300" />
             </div>
-            <button class="btn small" id="btnNewToday">Nuevo registro (hoy)</button>
+            <button class="btn small" id="btnNewToday">Nuevo (hoy)</button>
             <button class="btn small" id="btnLoadBase">Cargar base</button>
             <button class="btn small" id="btnSave">Guardar</button>
           </div>
         </div>
 
-        <!-- FAST ADD -->
-        <div class="card" id="fastAdd">
-          <label><strong>Agregar set (rápido)</strong> <span class="subtle">Tipo → Kilos → Reps → RPE → Añadir</span></label>
-          <div class="fastadd">
-            <div class="big">
-              <label for="faType">Tipo</label>
-              <select id="faType">
+        <!-- SIMPLE ADD (escribes series y kilos) -->
+        <div class="card simple" id="simpleAdd">
+          <label><b>Agregar ejercicio</b> <span class="hint">Nombre → Series (reps) → Pesos (kg) → Añadir</span></label>
+          <div class="grid">
+            <div>
+              <label for="saType">Tipo</label>
+              <select id="saType">
                 <option value="fuerza">Fuerza</option>
                 <option value="cardio">Cardio</option>
               </select>
             </div>
-            <div class="big">
-              <label for="faExercise">Ejercicio</label>
-              <input id="faExercise" list="exList" placeholder="Escribe o selecciona…">
+            <div>
+              <label for="saName">Nombre de ejercicio</label>
+              <input id="saName" list="exList" placeholder="Ej: Press de pecho (máquina)">
               <datalist id="exList"></datalist>
-              <select id="faCat" title="Categoría" class="smallSel">
-                <option>Empuje</option><option>Jale</option><option>Aislamiento</option>
-                <option>Pierna</option><option>Core</option><option>Cardio</option>
-              </select>
             </div>
-
-            <!-- Fuerza controls -->
-            <div id="faFuerza" class="grid">
-              <div class="big">
-                <label>Kilos</label>
-                <div class="step">
-                  <button type="button" data-delta="-0.5" class="faWm">−</button>
-                  <input id="faWeight" type="number" step="0.5" inputmode="decimal">
-                  <button type="button" data-delta="0.5" class="faWp">+</button>
-                </div>
+            <div id="saFuerzaBlock">
+              <div>
+                <label for="saReps">Series (reps)</label>
+                <input id="saReps" placeholder="Ej: 12-12-10-10 ó 12,12,10,10" inputmode="numeric">
               </div>
-              <div class="big">
-                <label>Reps</label>
-                <div class="step">
-                  <button type="button" data-delta="-1" class="faRm">−</button>
-                  <input id="faReps" type="number" step="1" min="0" max="50" inputmode="numeric">
-                  <button type="button" data-delta="1" class="faRp">+</button>
-                </div>
+              <div>
+                <label for="saWeights">Pesos (kg)</label>
+                <input id="saWeights" placeholder="Ej: 55-55-60-60 (step 0.5)" inputmode="decimal">
               </div>
-              <div class="big">
-                <label>RPE</label>
-                <div class="step">
-                  <button type="button" data-delta="-0.5" class="faEm">−</button>
-                  <input id="faRPE" type="number" step="0.5" min="1" max="10" inputmode="decimal">
-                  <button type="button" data-delta="0.5" class="faEp">+</button>
-                </div>
+              <div>
+                <label for="saCat">Categoría</label>
+                <select id="saCat">
+                  <option>Empuje</option><option>Jale</option><option>Aislamiento</option>
+                  <option>Pierna</option><option>Core</option>
+                </select>
               </div>
             </div>
-
-            <!-- Cardio controls -->
-            <div id="faCardio" class="grid" hidden>
-              <div class="big">
-                <label>Vel (km/h)</label>
-                <div class="step">
-                  <button type="button" data-delta="-0.1" class="faSm">−</button>
-                  <input id="faSpeed" type="number" step="0.1" min="0" max="40" inputmode="decimal">
-                  <button type="button" data-delta="0.1" class="faSp">+</button>
-                </div>
+            <div id="saCardioBlock" hidden>
+              <div>
+                <label for="saSpeed">Velocidad (km/h)</label>
+                <input id="saSpeed" type="number" step="0.1" inputmode="decimal" placeholder="Ej: 6">
               </div>
-              <div class="big">
-                <label>Inclin (%)</label>
-                <div class="step">
-                  <button type="button" data-delta="-1" class="faGm">−</button>
-                  <input id="faGrade" type="number" step="1" min="0" max="30" inputmode="decimal">
-                  <button type="button" data-delta="1" class="faGp">+</button>
-                </div>
+              <div>
+                <label for="saGrade">Inclinación (%)</label>
+                <input id="saGrade" type="number" step="1" inputmode="numeric" placeholder="Ej: 6">
               </div>
-              <div class="big">
-                <label>Minutos</label>
-                <div class="step">
-                  <button type="button" data-delta="-1" class="faMm">−</button>
-                  <input id="faMinutes" type="number" step="1" min="0" max="180" inputmode="numeric">
-                  <button type="button" data-delta="1" class="faMp">+</button>
-                </div>
-              </div>
-              <div class="big">
-                <label>RPE</label>
-                <div class="step">
-                  <button type="button" data-delta="-0.5" class="faCEm">−</button>
-                  <input id="faRPEc" type="number" step="0.5" min="1" max="10" inputmode="decimal">
-                  <button type="button" data-delta="0.5" class="faCEp">+</button>
-                </div>
+              <div>
+                <label for="saMinutes">Minutos</label>
+                <input id="saMinutes" type="number" step="1" inputmode="numeric" placeholder="Ej: 10">
               </div>
             </div>
-
-            <button id="faAdd" class="btn primary block">Añadir</button>
-            <div class="subtle" id="faHint">Serie #1</div>
+            <button id="saAdd" class="btn primary block">Añadir</button>
+            <div class="hint" id="saHint">Serie #1</div>
           </div>
         </div>
 
-        <!-- Listado del día + resumen y nota -->
+        <!-- Listado del día + resumen + cómo me sentí + nota -->
         <div class="card">
-          <label>Sesión del día</label>
+          <label><b>Sesión del día</b></label>
           <div id="dayList"></div>
+
           <div class="panel" style="margin-top:10px">
-            <label>Resumen</label>
-            <progress id="prog" max="100" value="0" aria-label="Cumplimiento diario" style="width:100%; height:12px"></progress>
+            <label><b>Cómo me sentí</b> <span class="hint">(1=candado 🔒 / 10=🔥 súper fuerte)</span></label>
+            <div class="feel-wrap">
+              <div class="feel-row">
+                <div class="feel-emoji" id="feelEmoji">😐</div>
+                <input type="range" id="feelRange" min="1" max="10" step="1" value="7" aria-label="Cómo me sentí">
+                <span class="feel-chip" id="feelLabel">7 / 10</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="panel" style="margin-top:10px">
+            <label><b>Resumen</b></label>
+            <progress id="prog" max="100" value="0" style="width:100%; height:12px"></progress>
             <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:6px">
               <span class="chip">Cumplimiento: <b id="progPct">0%</b></span>
               <span class="chip">Kcal: <b id="kcalTotal">0</b></span>
               <span class="chip" id="miniText">—</span>
             </div>
           </div>
-        </div>
 
-        <div class="panel">
-          <label for="note">Notas de salud / comentarios</label>
-          <textarea id="note" placeholder="Ej: rodilla ok, buen sueño, etc."></textarea>
+          <div class="panel" style="margin-top:10px">
+            <label for="note"><b>Notas de salud / comentarios</b></label>
+            <textarea id="note" placeholder="Ej: rodilla OK, respiración nasal, etc."></textarea>
+          </div>
         </div>
       </div>
     </section>
@@ -261,15 +228,10 @@
     <section id="tab-calendario" hidden aria-label="Calendario">
       <div class="grid">
         <div class="card">
-          <div class="row" style="flex-wrap:wrap; gap:8px">
-            <div>
-              <label>Mes / Año</label>
-              <div class="row">
-                <button class="btn small" id="monPrev">◀</button>
-                <div class="chip" id="monLabel">—</div>
-                <button class="btn small" id="monNext">▶</button>
-              </div>
-            </div>
+          <div class="row" style="flex-wrap:wrap">
+            <button class="btn small" id="monPrev">◀</button>
+            <div class="chip" id="monLabel">—</div>
+            <button class="btn small" id="monNext">▶</button>
           </div>
           <div style="height:8px"></div>
           <div class="cal" id="heatGrid" aria-label="Calendario heatmap" role="grid">
@@ -310,7 +272,7 @@
       </div>
     </section>
 
-    <!-- ===== Metas (nueva pestaña exclusiva) ===== -->
+    <!-- ===== Metas ===== -->
     <section id="tab-metas" hidden aria-label="Metas mensuales">
       <div class="grid">
         <div class="card">
@@ -344,7 +306,6 @@
             <button class="btn" id="btnImport">Importar CSV del día</button>
           </div>
         </div>
-
         <div class="card">
           <label>Dashboard</label>
           <div class="row" style="flex-wrap:wrap">
@@ -353,7 +314,6 @@
           </div>
           <canvas id="dashCanvas" height="240" style="margin-top:10px"></canvas>
         </div>
-
         <div class="panel" id="datosDuros">
           <label>Datos duros (día actual)</label>
           <div id="rawDay"></div>
@@ -373,14 +333,12 @@
 
 <script>
 /** =========================
- *  PT Tracker — Fast Add + Draft (no se pierden datos)
- *  Cambios pedidos:
- *   - Controles grandes y apilados para añadir sets por máquina/ejercicio
- *   - Peso step 0.5; inclinación cinta step 1%
- *   - Recuerda el último peso usado por ejercicio
- *   - Nuevo tab "Metas" exclusivo
- *   - Mini-calendario arriba en Registrar
- *   - Sesión en edición (workDraft) para no borrar lo anterior
+ *  PT Tracker — Simple Log
+ *  - Registro tipo "nota": escribes series y kilos
+ *  - Sin steppers; inputs libres
+ *  - Slider de "cómo me sentí" 1–10 con emojis/colores
+ *  - Recuerda último peso por ejercicio
+ *  - DRAFT en memoria para no perder lo añadido
  *  ========================= */
 
 // ---------- Utilidades de fecha ----------
@@ -402,8 +360,7 @@ const LS = {
 let ctxDate = today();
 let charts = { goals:null, ex:null };
 let dirty = false;
-// DRAFT en memoria (para no perder lo agregado)
-let workDraft = null;
+let workDraft = null; // sesión en edición
 
 // ---------- Semillas ----------
 const SEED_EX = [
@@ -417,7 +374,6 @@ const SEED_EX = [
   {exId:'ex_rdl_barra', name:'Peso muerto rumano (barra)', category:'Pierna'},
   {exId:'ex_cinta', name:'Cinta (cardio)', category:'Cardio'},
 ];
-
 const AUG_TEXT = `Asistencia: ≥10 sesiones (óptimo 12–13).
 Cargas/volumen (fin de agosto):
 - Press pecho: 4×(12–12–10–10) con 55–55–57.5–57.5 kg (RPE 8–9 última).
@@ -431,29 +387,18 @@ Cargas/volumen (fin de agosto):
 RPE: promedio 7–8; ≥1 top set a RPE 8–9 por ejercicio clave.
 Cardio: 10′ post fuerza @ 6 km/h, 7% → ≥80% de sesiones.
 Rodilla: 0 dolor; sin correr; OK caminata inclinada; priorizar RDL técnico + extensiones; movilidad.`;
-
-const SEED_BASE_AUG = (()=> {
-  const it = [];
-  it.push({ exId:'ex_cinta', name:'Cinta (cardio)', category:'Cardio', sets:[{speed:5.5, grade:6, minutes:8, rpe:6}] });
-  it.push({ exId:'ex_press_pecho_maquina', name:'Press pecho (máquina)', category:'Empuje',
-    sets:[{weight:50,reps:12,rpe:7},{weight:52.5,reps:12,rpe:7.5},{weight:52.5,reps:10,rpe:8},{weight:55,reps:10,rpe:8}] });
-  it.push({ exId:'ex_remo_sentado_polea', name:'Remo sentado (polea)', category:'Jale',
-    sets:[{weight:52,reps:12,rpe:7},{weight:52,reps:12,rpe:7.5},{weight:54,reps:10,rpe:8},{weight:54,reps:10,rpe:8}] });
-  it.push({ exId:'ex_curl_biceps_maquina', name:'Curl bíceps (máquina)', category:'Aislamiento',
-    sets:[{weight:35,reps:12,rpe:7},{weight:35,reps:12,rpe:7.5},{weight:37.5,reps:12,rpe:8},{weight:37.5,reps:12,rpe:8}] });
-  it.push({ exId:'ex_jalon_cerrado', name:'Jalón polea (agarre cerrado)', category:'Jale',
-    sets:[{weight:40,reps:12,rpe:7},{weight:40,reps:12,rpe:7.5},{weight:40,reps:10,rpe:8},{weight:40,reps:10,rpe:8}] });
-  it.push({ exId:'ex_press_hombros_maquina', name:'Press hombros (máquina)', category:'Empuje',
-    sets:[{weight:30,reps:12,rpe:7},{weight:30,reps:12,rpe:7.5},{weight:32.5,reps:10,rpe:8},{weight:32.5,reps:10,rpe:8}] });
-  it.push({ exId:'ex_crunch_hummett', name:'Crunch en máquina (Hummett)', category:'Core',
-    sets:[{weight:30,reps:15,rpe:7},{weight:30,reps:15,rpe:7},{weight:30,reps:15,rpe:7.5},{weight:35,reps:15,rpe:8}] });
-  it.push({ exId:'ex_extension_piernas', name:'Extensión de piernas', category:'Pierna',
-    sets:[{weight:35,reps:15,rpe:7},{weight:35,reps:12,rpe:7.5},{weight:35,reps:12,rpe:8}] });
-  it.push({ exId:'ex_rdl_barra', name:'Peso muerto rumano (barra)', category:'Pierna',
-    sets:[{weight:30,reps:12,rpe:7},{weight:30,reps:12,rpe:7.5},{weight:30,reps:12,rpe:8}] });
-  it.push({ exId:'ex_cinta', name:'Cinta (cardio)', category:'Cardio', sets:[{speed:6, grade:7, minutes:10, rpe:7}] });
-  return it;
-})();
+const SEED_BASE_AUG = [
+  { exId:'ex_cinta', name:'Cinta (cardio)', category:'Cardio', sets:[{speed:5.5, grade:6, minutes:8, rpe:6}] },
+  { exId:'ex_press_pecho_maquina', name:'Press pecho (máquina)', category:'Empuje', sets:[{weight:50,reps:12,rpe:7},{weight:52.5,reps:12,rpe:7.5},{weight:52.5,reps:10,rpe:8},{weight:55,reps:10,rpe:8}] },
+  { exId:'ex_remo_sentado_polea', name:'Remo sentado (polea)', category:'Jale', sets:[{weight:52,reps:12,rpe:7},{weight:52,reps:12,rpe:7.5},{weight:54,reps:10,rpe:8},{weight:54,reps:10,rpe:8}] },
+  { exId:'ex_curl_biceps_maquina', name:'Curl bíceps (máquina)', category:'Aislamiento', sets:[{weight:35,reps:12,rpe:7},{weight:35,reps:12,rpe:7.5},{weight:37.5,reps:12,rpe:8},{weight:37.5,reps:12,rpe:8}] },
+  { exId:'ex_jalon_cerrado', name:'Jalón polea (agarre cerrado)', category:'Jale', sets:[{weight:40,reps:12,rpe:7},{weight:40,reps:12,rpe:7.5},{weight:40,reps:10,rpe:8},{weight:40,reps:10,rpe:8}] },
+  { exId:'ex_press_hombros_maquina', name:'Press hombros (máquina)', category:'Empuje', sets:[{weight:30,reps:12,rpe:7},{weight:30,reps:12,rpe:7.5},{weight:32.5,reps:10,rpe:8},{weight:32.5,reps:10,rpe:8}] },
+  { exId:'ex_crunch_hummett', name:'Crunch en máquina (Hummett)', category:'Core', sets:[{weight:30,reps:15,rpe:7},{weight:30,reps:15,rpe:7},{weight:30,reps:15,rpe:7.5},{weight:35,reps:15,rpe:8}] },
+  { exId:'ex_extension_piernas', name:'Extensión de piernas', category:'Pierna', sets:[{weight:35,reps:15,rpe:7},{weight:35,reps:12,rpe:7.5},{weight:35,reps:12,rpe:8}] },
+  { exId:'ex_rdl_barra', name:'Peso muerto rumano (barra)', category:'Pierna', sets:[{weight:30,reps:12,rpe:7},{weight:30,reps:12,rpe:7.5},{weight:30,reps:12,rpe:8}] },
+  { exId:'ex_cinta', name:'Cinta (cardio)', category:'Cardio', sets:[{speed:6, grade:7, minutes:10, rpe:7}] },
+];
 
 // ---------- Storage helpers ----------
 const readLS = (k, def)=> { try{ const v = JSON.parse(localStorage.getItem(k)); return v ?? def; } catch(e){ return def; } };
@@ -478,7 +423,7 @@ const setBase = (items)=> writeLS(LS.base, items);
 const getLastWeights = ()=> readLS(LS.lastWeights, {});
 const setLastWeights = (obj)=> writeLS(LS.lastWeights, obj);
 
-const defaultWorkout = (date)=> ({ id:'w_'+date, date, bodyWeight:74, note:'', items:[], indicators:{volume_total_kg:0, topSet:0, rpeAvg:0, cardioMin:0} });
+const defaultWorkout = (date)=> ({ id:'w_'+date, date, bodyWeight:74, note:'', feel:7, items:[], indicators:{volume_total_kg:0, topSet:0, rpeAvg:0, cardioMin:0} });
 
 // ---------- Cálculos ----------
 function kcalCardioSet(speed_kmh, incline_pct, minutes, bw){
@@ -507,7 +452,7 @@ function computeIndicators(workout){
       }
     }else{
       for(const s of it.sets){
-        const W=Number(s.weight||0), R=Number(s.reps||0), E=Number(s.rpe||0);
+        const W=Number(s.weight||0), R=Number(s.reps||0), E=Number(s.rpe||workout.feel||7);
         vol += W*R; top=Math.max(top,W);
         if(E) rpeList.push(E);
         kcal += kcalStrengthSet(E, bw);
@@ -521,22 +466,20 @@ function computeIndicators(workout){
   return { kcalTotal: Math.round(kcal), progPct, doneCount, baseTotalSets };
 }
 
-// ---------- Estado UI ----------
+// ---------- UI helpers ----------
 const el = (id)=> document.getElementById(id);
 function markDirty(v=true){ dirty=v; el('saveState').textContent = v? '• cambios sin guardar' : '• guardado'; }
-
 function setCtxDate(d){
   ctxDate = d;
   el('ctxDateLabel').textContent = fmt(d);
   el('monLabel').textContent = d.toLocaleString('es-CL', {month:'long', year:'numeric'});
-  // cargar draft desde LS o por defecto
   const wos = getWorkouts();
   const found = wos.find(w=> w.date===fmt(ctxDate));
   workDraft = found ? JSON.parse(JSON.stringify(found)) : defaultWorkout(fmt(ctxDate));
   refreshAll();
 }
 
-// ---------- Catálogo y helpers ----------
+// ---------- Catálogo ----------
 function buildExerciseCatalogDatalist(){
   const dl = el('exList'); dl.innerHTML='';
   getExercises().forEach(e=>{ const o=document.createElement('option'); o.value=e.name; dl.appendChild(o); });
@@ -548,110 +491,93 @@ function findOrCreateExercise(name, category){
   if(!ex){ ex = {exId:'ex_'+Date.now(), name, category}; exs.push(ex); setExercises(exs); buildExerciseCatalogDatalist(); }
   return ex;
 }
-function ensureItem(ex){
-  // devuelve el ExerciseItem dentro del draft (crea si no existe)
+
+// ---------- Simple Add ----------
+function parseList(str){
+  if(!str) return [];
+  return str.split(/[\s,;–—-]+/).map(s=> s.trim()).filter(Boolean);
+}
+function addStrengthByLists(name, cat, repsStr, weightsStr){
+  const repsList = parseList(repsStr).map(n=> parseInt(n,10) || 0);
+  let wList = parseList(weightsStr).map(n=> parseFloat(n.replace(',','.')) || 0);
+  if(repsList.length===0) throw new Error('Debes indicar al menos 1 serie en "Series (reps)".');
+  if(wList.length===0) throw new Error('Debes indicar al menos 1 peso en "Pesos (kg)".');
+  // Si hay 1 peso, se aplica a todas las series; si hay menos, completa con último
+  while(wList.length < repsList.length) wList.push(wList[wList.length-1]);
+  const ex = findOrCreateExercise(name, cat);
   let it = workDraft.items.find(i=> i.exId===ex.exId);
-  if(!it){ it = { exId:ex.exId, name:ex.name, category:ex.category, sets:[] }; workDraft.items.push(it); }
-  return it;
+  if(!it){ it = { exId:ex.exId, name:ex.name, category:cat, sets:[] }; workDraft.items.push(it); }
+  repsList.forEach((r, idx)=> it.sets.push({weight:round05(wList[idx]), reps:r, rpe:workDraft.feel||7}));
+  // recordar último peso
+  const lw = getLastWeights(); lw[ex.exId] = round05(wList[wList.length-1]); setLastWeights(lw);
 }
+function addCardio(name, speed, grade, minutes){
+  const ex = findOrCreateExercise(name, 'Cardio');
+  let it = workDraft.items.find(i=> i.exId===ex.exId);
+  if(!it){ it = { exId:ex.exId, name:ex.name, category:'Cardio', sets:[] }; workDraft.items.push(it); }
+  it.sets.push({speed:toNum(speed), grade:toNum(grade), minutes:toInt(minutes), rpe:workDraft.feel||7});
+}
+function initSimpleAdd(){
+  const t = el('saType');
+  const fuerza = ()=> { el('saFuerzaBlock').hidden=false; el('saCardioBlock').hidden=true; };
+  const cardio = ()=> { el('saFuerzaBlock').hidden=true; el('saCardioBlock').hidden=false; };
+  t.addEventListener('change', ()=> t.value==='cardio'? cardio(): fuerza());
+  fuerza();
 
-// ---------- FAST ADD (UI grande) ----------
-function initFastAdd(){
-  const faType = el('faType');
-  const faExercise = el('faExercise');
-  const faCat = el('faCat');
-  const lastW = getLastWeights();
-
-  // toggles
-  const showPanels = ()=> {
-    const forza = faType.value==='fuerza';
-    el('faFuerza').hidden = !forza;
-    el('faCardio').hidden = forza;
-    updateFAHint();
-  };
-  faType.addEventListener('change', showPanels);
-
-  // steppers
-  const stepper = (minusSel, inputSel, plusSel, step=1)=>{
-    const mBtns = document.querySelectorAll(minusSel);
-    const pBtns = document.querySelectorAll(plusSel);
-    const inp = el(inputSel);
-    mBtns.forEach(b=> b.addEventListener('click', ()=> { const s=Number(b.dataset.delta||-step); inp.value = roundTo(Number(inp.value||0)+s); }));
-    pBtns.forEach(b=> b.addEventListener('click', ()=> { const s=Number(b.dataset.delta||step);  inp.value = roundTo(Number(inp.value||0)+s); }));
-  };
-  stepper('.faWm','faWeight','.faWp',0.5);
-  stepper('.faRm','faReps','.faRp',1);
-  stepper('.faEm','faRPE','.faEp',0.5);
-  stepper('.faSm','faSpeed','.faSp',0.1);
-  stepper('.faGm','faGrade','.faGp',1);
-  stepper('.faMm','faMinutes','.faMp',1);
-  stepper('.faCEm','faRPEc','.faCEp',0.5);
-
-  // recordar último peso por ejercicio
-  faExercise.addEventListener('change', ()=>{
-    const name = faExercise.value.trim();
-    if(!name) return;
-    const ex = getExercises().find(e=> e.name.toLowerCase()===name.toLowerCase());
-    if(ex && lastW[ex.exId]!=null){ el('faWeight').value = lastW[ex.exId]; }
-    updateFAHint();
+  const nameI = el('saName');
+  nameI.addEventListener('change', ()=>{
+    const name = nameI.value.trim().toLowerCase();
+    const ex = getExercises().find(e=> e.name.toLowerCase()===name);
+    if(ex){
+      // prellenar último peso
+      const lw = getLastWeights(); if(lw[ex.exId]!=null) el('saWeights').value = String(lw[ex.exId]);
+      updateSAHint();
+    }
   });
 
-  // Añadir set
-  el('faAdd').addEventListener('click', ()=>{
-    const name = faExercise.value.trim();
-    if(!name){ alert('Escribe o selecciona un ejercicio'); return; }
-    const type = faType.value;
-    const ex = findOrCreateExercise(name, (type==='cardio')? 'Cardio' : faCat.value);
-    const item = ensureItem(ex);
+  el('saAdd').addEventListener('click', ()=>{
+    const type = t.value;
+    const name = nameI.value.trim();
+    if(!name){ alert('Escribe el nombre del ejercicio'); return; }
 
-    if(type==='cardio'){
-      const speed = toNum(el('faSpeed').value), grade=toNum(el('faGrade').value), minutes=toInt(el('faMinutes').value), rpe=toNum(el('faRPEc').value||6);
-      if(minutes<=0){ alert('Minutos debe ser > 0'); return; }
-      item.sets.push({speed, grade, minutes, rpe});
-    }else{
-      const weight = toNum(el('faWeight').value), reps=toInt(el('faReps').value||0), rpe=toNum(el('faRPE').value||6);
-      if(reps<=0){ alert('Reps debe ser > 0'); return; }
-      item.sets.push({weight, reps, rpe});
-      // guarda último peso para este ejercicio
-      const map = getLastWeights(); map[ex.exId] = weight; setLastWeights(map);
-    }
-
-    renderDayList(); updateSummary(workDraft); markDirty();
-
-    // Preparar siguiente máquina: limpiar solo campos de set, manteniendo el selector visible
-    if(type==='cardio'){
-      el('faSpeed').value=''; el('faGrade').value=''; el('faMinutes').value=''; el('faRPEc').value='7';
-    }else{
-      // deja prellenado con último peso usado
-      el('faReps').value=''; el('faRPE').value='7';
-    }
-    updateFAHint();
+    try{
+      if(type==='cardio'){
+        const sp = el('saSpeed').value, gr=el('saGrade').value, min=el('saMinutes').value;
+        if(!min || Number(min)<=0) throw new Error('Minutos debe ser > 0');
+        addCardio(name, sp, gr, min);
+        el('saSpeed').value=''; el('saGrade').value=''; el('saMinutes').value='';
+      }else{
+        const reps = el('saReps').value;
+        const w    = el('saWeights').value;
+        const cat  = el('saCat').value;
+        addStrengthByLists(name, cat, reps, w);
+        el('saReps').value=''; // deja el último peso por comodidad
+      }
+      renderDayList(); updateSummary(workDraft); markDirty(); updateSAHint();
+    }catch(e){ alert(e.message); }
   });
-
-  // Defaults
-  el('faRPE').value = '7';
-  el('faRPEc').value = '7';
-  showPanels();
-  updateFAHint();
+  updateSAHint();
 }
-function updateFAHint(){
-  const name = (el('faExercise').value||'').trim();
+function updateSAHint(){
+  const name = (el('saName').value||'').trim();
   let n = 1;
   if(name && workDraft){
-    const exs = getExercises();
-    const ex = exs.find(e=> e.name.toLowerCase()===name.toLowerCase());
+    const ex = getExercises().find(e=> e.name.toLowerCase()===name.toLowerCase());
     if(ex){
       const it = workDraft.items.find(i=> i.exId===ex.exId);
       if(it) n = (it.sets?.length||0)+1;
     }
   }
-  el('faHint').textContent = `Serie #${n}`;
+  el('saHint').textContent = `Serie #${n}`;
 }
-function roundTo(v){ return Number((Math.round(v*100)/100).toFixed(2)); }
-function toNum(v){ const x=Number(v); return isFinite(x)? x:0; }
+function round05(v){
+  const x = Math.round((Number(v)||0)*2)/2; // múltiplos de 0.5
+  return Number(x.toFixed(2));
+}
+function toNum(v){ const x=Number(String(v).replace(',','.')); return isFinite(x)? x:0; }
 function toInt(v){ const x=parseInt(v,10); return isFinite(x)? x:0; }
 
-// ---------- Render listado del día (compacto) ----------
+// ---------- Listado del día ----------
 function renderDayList(){
   const wrap = el('dayList'); wrap.innerHTML='';
   let exCount=0;
@@ -667,13 +593,15 @@ function renderDayList(){
     }else{
       const vol = it.sets.reduce((a,s)=>a+(Number(s.weight||0)*Number(s.reps||0)),0);
       const top = it.sets.reduce((m,s)=> Math.max(m, Number(s.weight||0)), 0);
-      meta.textContent = `${it.sets.length} set(s) • Vol ${vol} kg • Top ${top} kg`;
+      // agrega mini patrón si las reps varían
+      const repsStr = it.sets.map(s=> s.reps||0).join('-');
+      const wStr = it.sets.map(s=> s.weight||0).join('-');
+      meta.textContent = `${it.sets.length} set(s) • ${repsStr} reps • ${wStr} kg • Vol ${vol} kg • Top ${top} kg`;
     }
     left.append(name, meta);
     const right = document.createElement('div');
     const rm = document.createElement('button'); rm.className='btn small'; rm.textContent='Quitar';
     rm.addEventListener('click', ()=>{
-      // quitar ejercicio completo
       workDraft.items = workDraft.items.filter(x=> x!==it);
       renderDayList(); updateSummary(workDraft); markDirty();
     });
@@ -684,10 +612,9 @@ function renderDayList(){
   el('miniText').textContent = `${fmt(ctxDate)} • ${exCount} ejercicios`;
 }
 
-// ---------- Mini calendario (arriba en Registrar) ----------
+// ---------- Mini calendario (registrar) ----------
 function buildMiniCal(){
   const cont = el('miniCal');
-  // elimina días prev ya dibujados (deja cabecera)
   Array.from(cont.querySelectorAll('.day')).forEach(n=>n.remove());
   const base = new Date(ctxDate.getFullYear(), ctxDate.getMonth(), 1);
   const firstDow = ((base.getDay()||7)-1);
@@ -721,8 +648,7 @@ function buildHeatmap(){
   const firstDow = ((base.getDay()||7)-1);
   for(let i=0;i<firstDow;i++){ const f=document.createElement('div'); f.className='day na'; cont.appendChild(f); }
   const total = endOfMonth(ctxDate).getDate();
-  const wos = getWorkouts();
-  const monthStr = ym(ctxDate);
+  const wos = getWorkouts(); const monthStr = ym(ctxDate);
   for(let d=1; d<=total; d++){
     const dateStr = `${monthStr}-${String(d).padStart(2,'0')}`;
     const w = wos.find(x=>x.date===dateStr);
@@ -743,7 +669,7 @@ function buildHeatmap(){
   }
 }
 
-// ---------- Metas (chart y editor) ----------
+// ---------- Metas ----------
 function getMonthGoal(mstr){
   const g = getGoals();
   if(!g[mstr]){
@@ -761,13 +687,11 @@ function buildGoalsChart(){
   const goal = getMonthGoal(m);
   el('goalText').textContent = goal.goalText || AUG_TEXT;
   el('goalBadge').textContent = `Meta mes: ${goal.days} días • Cardio ≥${Math.round(goal.cardioRateTarget*100)}%`;
-  // progresos
   const wos = getWorkouts().filter(w=> w.date.startsWith(m));
   const asistencia = new Set(wos.map(w=>w.date)).size;
   let vol = 0, cardioOk=0;
   wos.forEach(w=>{
-    const ww = JSON.parse(JSON.stringify(w));
-    computeIndicators(ww);
+    const ww = JSON.parse(JSON.stringify(w)); computeIndicators(ww);
     vol += ww.indicators.volume_total_kg;
     if(ww.indicators.cardioMin>=10) cardioOk += 1;
   });
@@ -783,14 +707,12 @@ function buildGoalsChart(){
   const ctx = el('goalsChart').getContext('2d');
   if(charts.goals) charts.goals.destroy();
   charts.goals = new Chart(ctx, { type:'bar', data, options:{ responsive:true, scales:{y:{beginAtZero:true}}, plugins:{legend:{display:true}} } });
-
-  // chip estado
   const ok = asistencia>=Math.min(goal.days, goal.days-2);
   el('metaChip').className = 'chip ' + (ok? 'ok':'warn');
   el('metaChip').textContent = `Meta mes: ${asistencia}/${goal.days} días`;
 }
 
-// ---------- Analítica por ejercicio ----------
+// ---------- Analítica ----------
 function collectExerciseNames(){
   const setNames = new Set();
   getExercises().forEach(e=> setNames.add(e.name));
@@ -804,7 +726,6 @@ function populateAnaliticaSelect(){
 let currentMetric='vol';
 ['btnVol','btnTop','btnEpley'].forEach(id=> el(id).addEventListener('click', e=>{ currentMetric=e.target.dataset.metric; updateExerciseChart(); }));
 el('exSelectAnalitica').addEventListener('change', updateExerciseChart);
-
 function updateExerciseChart(){
   const name = el('exSelectAnalitica').value;
   const wos = getWorkouts().slice().sort((a,b)=> a.date.localeCompare(b.date));
@@ -833,17 +754,18 @@ function updateExerciseChart(){
 
 // ---------- Exportar / Importar / Dashboard ----------
 function toCSVDay(workout){
-  const rows = [['date','body_weight_kg','exercise','category','set','weight_kg','reps','rpe','speed_kmh','incline_pct','minutes']];
+  const rows = [['date','body_weight_kg','exercise','category','set','weight_kg','reps','rpe','speed_kmh','incline_pct','minutes','feel_1_10']];
   for(const it of workout.items){
     for(const [i,s] of (it.sets||[]).entries()){
       rows.push([
         workout.date, workout.bodyWeight, it.name, it.category, i+1,
         (it.category==='Cardio')? '' : (s.weight??''),
         (it.category==='Cardio')? '' : (s.reps??''),
-        s.rpe ?? '',
+        s.rpe ?? workout.feel ?? '',
         (it.category==='Cardio')? (s.speed??'') : '',
         (it.category==='Cardio')? (s.grade??'') : '',
         (it.category==='Cardio')? (s.minutes??'') : '',
+        workout.feel ?? ''
       ]);
     }
   }
@@ -857,7 +779,7 @@ function exportDay(){ const w = workDraft ?? currentWorkout(); download(`pt_day_
 function exportMonth(){
   const m = ym(ctxDate);
   const wos = getWorkouts().filter(w=> w.date.startsWith(m));
-  const rows = [['date','body_weight_kg','exercise','category','set','weight_kg','reps','rpe','speed_kmh','incline_pct','minutes']];
+  const rows = [['date','body_weight_kg','exercise','category','set','weight_kg','reps','rpe','speed_kmh','incline_pct','minutes','feel_1_10']];
   wos.forEach(w=>{
     const csv = toCSVDay(w).split('\n'); csv.shift();
     csv.forEach(line=> { if(line.trim()) rows.push(line.split(',')); });
@@ -866,7 +788,7 @@ function exportMonth(){
 }
 function exportAll(){
   const wos = getWorkouts().slice().sort((a,b)=> a.date.localeCompare(b.date));
-  const rows = [['date','body_weight_kg','exercise','category','set','weight_kg','reps','rpe','speed_kmh','incline_pct','minutes']];
+  const rows = [['date','body_weight_kg','exercise','category','set','weight_kg','reps','rpe','speed_kmh','incline_pct','minutes','feel_1_10']];
   wos.forEach(w=>{
     const csv = toCSVDay(w).split('\n'); csv.shift();
     csv.forEach(line=> { if(line.trim()) rows.push(line.split(',')); });
@@ -885,7 +807,7 @@ function parseCSVLine(line){
 function importDayCSV(text){
   const header = 'date,body_weight_kg,exercise,category,set,weight_kg,reps,rpe,speed_kmh,incline_pct,minutes';
   const lines = text.trim().split(/\r?\n/);
-  if(!lines[0].toLowerCase().startsWith(header)) throw new Error('Cabecera CSV inválida');
+  if(!lines[0].toLowerCase().startsWith('date,')) throw new Error('Cabecera CSV inválida');
   const [date] = lines[1].split(',');
   const w = { ...defaultWorkout(date), items:[] };
   const map = new Map();
@@ -899,7 +821,6 @@ function importDayCSV(text){
     else it.sets.push({weight:Number(wei||0), reps:Number(reps||0), rpe:Number(rpe||0)});
   }
   w.items = Array.from(map.values());
-  // set draft y guardar
   setCtxDate(ymdToDate(w.date));
   workDraft = JSON.parse(JSON.stringify(w));
   saveCurrentWorkout(workDraft);
@@ -914,7 +835,7 @@ function drawDashboard(workout, kcalTotal){
   ctx.fillText('PT Dashboard', 12, 22);
   ctx.fillStyle='#9aa5bd'; ctx.fillText(workout.date, 12, 42);
   const inds = workout.indicators || computeIndicators(JSON.parse(JSON.stringify(workout))).indicators;
-  const chips=[`Kcal ${kcalTotal}`,`Vol ${inds.volume_total_kg} kg`,`Top ${inds.topSet} kg`,`RPE ${inds.rpeAvg}`,`Cardio ${inds.cardioMin} min`,`Ex ${workout.items.length}`];
+  const chips=[`Kcal ${kcalTotal}`,`Vol ${inds.volume_total_kg} kg`,`Top ${inds.topSet} kg`,`RPE ${inds.rpeAvg}`,`Cardio ${inds.cardioMin} min`,`Ex ${workout.items.length}`,`Feel ${workout.feel}/10`];
   let x=12,y=72;
   chips.forEach(t=>{
     ctx.fillStyle='#10182a'; ctx.strokeStyle='#1f2a44';
@@ -951,6 +872,7 @@ function saveCurrentWorkout(workout){
 function updateSummary(workout){
   workout.bodyWeight = Number(el('bodyWeight').value||74);
   workout.note = el('note').value||'';
+  workout.feel = Number(el('feelRange').value||7);
   const {kcalTotal, progPct} = computeIndicators(workout);
   el('prog').value = progPct; el('progPct').textContent = `${progPct}%`;
   el('kcalTotal').textContent = `${kcalTotal}`;
@@ -958,21 +880,35 @@ function updateSummary(workout){
   drawDashboard(workout, kcalTotal);
 }
 function updateRawDay(workout){
-  const box=el('rawDay'); let out=`Fecha: ${workout.date} | Peso: ${workout.bodyWeight} kg\nNota: ${workout.note||'—'}\n\n`;
+  const box=el('rawDay'); let out=`Fecha: ${workout.date} | Peso: ${workout.bodyWeight} kg | Feel: ${workout.feel}/10\nNota: ${workout.note||'—'}\n\n`;
   for(const it of workout.items){
     out += `• ${it.name} [${it.category}]\n`;
     it.sets.forEach((s,i)=>{
-      if(it.category==='Cardio'){ out += `  - #${i+1} ${s.speed||0}km/h @ ${s.grade||0}% × ${s.minutes||0}min, RPE ${s.rpe||0}${s.done?' ✓':''}\n`; }
-      else{ out += `  - #${i+1} ${s.weight||0}kg × ${s.reps||0}, RPE ${s.rpe||0}${s.done?' ✓':''}\n`; }
+      if(it.category==='Cardio'){ out += `  - #${i+1} ${s.speed||0}km/h @ ${s.grade||0}% × ${s.minutes||0}min, RPE ${s.rpe||workout.feel||7}\n`; }
+      else{ out += `  - #${i+1} ${s.weight||0}kg × ${s.reps||0}, RPE ${s.rpe||workout.feel||7}\n`; }
     });
   } box.textContent = out;
 }
+
+// ---------- Feel slider (emoji + color) ----------
+function feelUpdateUI(v){
+  const em = ['🔒','😣','😕','🙂','🙂','😌','😎','💪','⚡️','🔥'];
+  const idx = Math.min(10, Math.max(1, parseInt(v,10))) - 1;
+  el('feelEmoji').textContent = em[idx] || '🙂';
+  el('feelLabel').textContent = `${v} / 10`;
+  // color del fondo según valor
+  const wrap = el('feelEmoji').closest('.feel-wrap');
+  const colors = ['#1b0b0b','#2a0f0f','#2a1a0f','#1a2610','#102619','#0f2a22','#0f2a28','#0f2a31','#0f233a','#0f1f3a'];
+  wrap.style.background = colors[idx] || '#0e162e';
+}
+el('feelRange').addEventListener('input', ()=> { feelUpdateUI(el('feelRange').value); markDirty(); updateSummary(workDraft); });
 
 // ---------- Refresh general ----------
 function refreshAll(){
   const w = workDraft ?? defaultWorkout(fmt(ctxDate));
   el('bodyWeight').value = w.bodyWeight ?? 74;
   el('note').value = w.note ?? '';
+  el('feelRange').value = w.feel ?? 7; feelUpdateUI(el('feelRange').value);
   renderDayList();
   updateSummary(w);
   buildMiniCal();
@@ -1011,6 +947,7 @@ el('btnSave').addEventListener('click', ()=>{
   if(!workDraft) workDraft = defaultWorkout(fmt(ctxDate));
   workDraft.bodyWeight = Number(el('bodyWeight').value||74);
   workDraft.note = el('note').value||'';
+  workDraft.feel = Number(el('feelRange').value||7);
   computeIndicators(workDraft);
   saveCurrentWorkout(workDraft);
   buildMiniCal(); buildHeatmap(); buildGoalsChart(); populateAnaliticaSelect();
@@ -1058,7 +995,7 @@ el('note').addEventListener('input', ()=>{
 });
 
 // ---------- Inicialización ----------
-initFastAdd();
+initSimpleAdd();
 setCtxDate(today());
 
 // ---------- Auto-tests básicos ----------
