@@ -1,0 +1,45 @@
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>PT Tracker – Historial Completo</title>
+</head>
+<body style="font-family:sans-serif; padding:2em; background:#f4f4f4;">
+  <h2>Importar historial completo (CSV)</h2>
+  <input type="file" id="importFile" accept=".csv"/>
+  <p id="status" style="margin-top:1em;"></p>
+
+  <script>
+    document.getElementById('importFile').addEventListener('change', async (event) => {
+      const file = event.target.files[0];
+      if (!file) return;
+      const text = await file.text();
+      const rows = text.trim().split('\n').map(r => r.split(','));
+      const headers = rows.shift();
+
+      const dateIdx = headers.indexOf("date");
+
+      const dataByDate = {};
+
+      for (let row of rows) {
+        const obj = {};
+        headers.forEach((h, i) => obj[h] = row[i]);
+        const date = obj.date;
+        if (!dataByDate[date]) dataByDate[date] = [];
+        dataByDate[date].push(obj);
+      }
+
+      const savedDates = Object.keys(dataByDate);
+      savedDates.forEach(date => {
+        const key = "pt_day_" + date;
+        localStorage.setItem(key, JSON.stringify(dataByDate[date]));
+      });
+
+      document.getElementById("status").textContent = 
+        `✅ ${savedDates.length} día(s) importado(s):\n` + savedDates.join(', ');
+    });
+  </script>
+</body>
+</html>
